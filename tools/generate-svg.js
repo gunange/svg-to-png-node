@@ -1,14 +1,13 @@
 const fs = require("fs");
-const {promises} = require("fs");
+const { promises } = require("fs");
 const { Resvg } = require("@resvg/resvg-js");
 const cheerio = require("cheerio");
-// const path = require("path");
+const exceljs = require("exceljs");
 
 class GenerateSvg {
-   svgTemplatePath = null;
-   pngOutputDir = null;
-   startingNumber = 1;
-   endingNumber = 135;
+   svgDirPath = null;
+
+   data = [];
    dpi = 600;
 
    async generate(number) {
@@ -18,7 +17,7 @@ class GenerateSvg {
       const outputFilename = `${text}.png`;
       const pngOutputPath = `${this.pngOutputDir}/${outputFilename}`;
 
-      const svg = await promises.readFile(this.svgTemplatePath);
+      const svg = await promises.readFile(this.svgDirPath);
       const modifiedSvg = await this.modifyTextWithParser(svg.toString(), text);
 
       const resvg = new Resvg(modifiedSvg, {
@@ -44,28 +43,50 @@ class GenerateSvg {
       // });
 
       const data = {
-         nama : $('#tspan3').text(),
-         nim : $('#tspan6').text(),
-         jenjang : $('#tspan9').text(),
-         prodi : $('#tspan12').text(),
-         ipk : $('#tspan15').text(),
-         judul : $('#flowRoot21').text() ,
-         foto : $('image').attr() ?? null
+         nama: $("#tspan3").text(),
+         nim: $("#tspan6").text(),
+         jenjang: $("#tspan9").text(),
+         prodi: $("#tspan12").text(),
+         ipk: $("#tspan15").text(),
+         judul: $("#flowRoot21").text(),
+         foto: $("image").attr() ?? null,
       };
 
       console.log(data);
-     
    }
 
    async getFileIndDir() {
-      const fileObjs = await fs.readdirSync(this.svgTemplatePath, {
+      const fileObjs = await fs.readdirSync(this.svgDirPath, {
          withFileTypes: true,
       });
 
       fileObjs.forEach((file) => {
-         if(file.name.endsWith('.svg'))
-         if (file.name == "001.svg") this.getDataSvg(file);
+         if (file.name.endsWith(".svg"))
+            if (file.name == "001.svg") this.getDataSvg(file);
       });
+   }
+
+   async setDataInExcel({ path = null, sheet = "Sheet1" }) {
+      const workbook = new exceljs.Workbook();
+      await workbook.xlsx.readFile(path);
+
+      const data = workbook.getWorksheet(sheet);
+      const transformedData = [];
+      data.eachRow((row, rowNumber) => {
+         if (rowNumber === 1) return;
+         const rowData = {};
+
+         row.eachCell((cell, cellIndex) => {
+            const header = data.getRow(1).getCell(cellIndex).value;
+            if (header) {
+               rowData[header.replace(/\s+/g, "_").toLowerCase()] = cell.value;
+            }
+         });
+
+         transformedData.push(rowData);
+      });
+
+      this.data = transformedData;
    }
 }
 

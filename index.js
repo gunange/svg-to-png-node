@@ -4,5 +4,9 @@ const gen = new  GenerateSvg();
 
 gen.svgTemplatePath = "./assets/svg";
 gen.pngOutputDir = "./export"
-gen.getFileIndDir();
+gen.setDataInExcel({
+   path: "./assets/data/mahasiswa.xlsx",
+   sheet: "Sheet1"
+});
+// gen.getFileIndDir();
 // gen.generateAutomatic();
