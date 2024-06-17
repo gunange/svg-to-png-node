@@ -1,12 +1,25 @@
 const GenerateSvg = require("./tools");
 
-const gen = new  GenerateSvg();
+class main {
+   generate ;
 
-gen.svgTemplatePath = "./assets/svg";
-gen.pngOutputDir = "./export"
-gen.setDataInExcel({
-   path: "./assets/data/mahasiswa.xlsx",
-   sheet: "Sheet1"
-});
-// gen.getFileIndDir();
-// gen.generateAutomatic();
+   constructor() {
+      this.generate = new GenerateSvg();
+      this.generate.svgDirPath = "./assets/svg";
+      this.generate.outputDir = "./export";
+
+      this.init();
+   }
+   async init() {
+      await this.generate.setupDataInExcel({
+         path: "./assets/data/mahasiswa.xlsx",
+         sheet: "Sheet1",
+      });
+
+      await this.generate.run();
+      await this.generate.exportToExcel("data-mhs");
+      
+   }
+}
+
+new main();

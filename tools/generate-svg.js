@@ -3,70 +3,35 @@ const { promises } = require("fs");
 const { Resvg } = require("@resvg/resvg-js");
 const cheerio = require("cheerio");
 const exceljs = require("exceljs");
+const { resolve } = require("path");
+const { rejects } = require("assert");
 
 class GenerateSvg {
    svgDirPath = null;
+   outputDir = "export";
 
    data = [];
+   outputData = [];
+   exportDataByProdi = false;
    dpi = 600;
 
-   async generate(number) {
-      const text = number.toString().padStart(3, "0");
-      console.info("\n\n✨ Create File : ", text);
-
-      const outputFilename = `${text}.png`;
-      const pngOutputPath = `${this.pngOutputDir}/${outputFilename}`;
-
-      const svg = await promises.readFile(this.svgDirPath);
-      const modifiedSvg = await this.modifyTextWithParser(svg.toString(), text);
-
-      const resvg = new Resvg(modifiedSvg, {
-         dpi: this.dpi,
-      });
-
-      const pngData = resvg.render();
-      const pngBuffer = pngData.asPng();
-
-      await promises.writeFile(pngOutputPath, pngBuffer);
-      console.info("✨ Done : ", pngOutputPath);
-   }
-
-   async getDataSvg(file_path) {
-      file_path = `${file_path.path}/${file_path.name}`;
-      const svg = (await promises.readFile(file_path)).toString();
-      const $ = cheerio.load(svg, {
-         xml: true,
-      });
-      // $("image").each((i, element) => {
-      //    console.log($(element));
-      //    // console.log($(element));
-      // });
-
-      const data = {
-         nama: $("#tspan3").text(),
-         nim: $("#tspan6").text(),
-         jenjang: $("#tspan9").text(),
-         prodi: $("#tspan12").text(),
-         ipk: $("#tspan15").text(),
-         judul: $("#flowRoot21").text(),
-         foto: $("image").attr() ?? null,
-      };
-
-      console.log(data);
-   }
-
-   async getFileIndDir() {
+   async run() {
+      console.info("\n✨ Generate Data SVG");
       const fileObjs = await fs.readdirSync(this.svgDirPath, {
          withFileTypes: true,
       });
 
-      fileObjs.forEach((file) => {
-         if (file.name.endsWith(".svg"))
-            if (file.name == "001.svg") this.getDataSvg(file);
-      });
+      for (const file of fileObjs) {
+         if (file.name.endsWith(".svg") && file.name !== "000.svg") {
+            await this.genDataSvg(file);
+         }
+      }
    }
 
-   async setDataInExcel({ path = null, sheet = "Sheet1" }) {
+   async setupDataInExcel({ path = "", sheet = "Sheet1" }) {
+      console.info("\n✨ Generate Data IN Excel : ", path);
+      console.info("✨ Worksheet : ", sheet);
+
       const workbook = new exceljs.Workbook();
       await workbook.xlsx.readFile(path);
 
@@ -88,6 +53,79 @@ class GenerateSvg {
 
       this.data = transformedData;
    }
+
+   async genDataSvg(file_path) {
+      await new Promise(async (resolve, rejects) => {
+         const __file = `${file_path.path}/${file_path.name}`;
+         console.info("data file : ", __file, " ✅");
+         const svg = (await promises.readFile(__file)).toString();
+         const $ = cheerio.load(svg, {
+            xml: true,
+         });
+
+         const data = {
+            nama: $("#tspan3").text(),
+            nim: $("#tspan6").text(),
+            jenjang: $("#tspan9").text(),
+            prodi: $("#tspan12").text(),
+            ipk: $("#tspan15").text(),
+            judul: $("#flowRoot21").text(),
+            svg_name: file_path.name.replace(/\.svg/, ""),
+            foto: $("image").attr() ?? null,
+         };
+
+         const merge = this.mergeDataInExcel(data);
+
+         this.outputData.push(merge);
+
+         resolve(__file);
+      });
+   }
+
+   mergeDataInExcel(data) {
+      const merge = this.data.find((el) => el.npm == data.nim) ?? {};
+      return {
+         ...data,
+         angkatan: merge.tahun_masuk,
+      };
+   }
+
+   async exportToExcel({ output = "data-mahasiswa" }) {
+      const fileName = `${this.outputDir}/${output}.xlsx`;
+      const workbook = new exceljs.Workbook();
+      const worksheet = workbook.addWorksheet("All Data Mahasiswa");
+      worksheet.addRow([
+         "No",
+         "Nama",
+         "NIM",
+         "Jenjang",
+         "Prodi",
+         "IPK",
+         "Judul Skripsi",
+         "No. Urut",
+         "Foto",
+      ]);
+      console.info("Mohon tunggu data excel sedang dibuat ..");
+
+      this.outputData.forEach((row, i) =>
+         worksheet.addRow([
+            i + 1,
+            row.nama,
+            row.nim,
+            row.jenjang,
+            row.prodi,
+            row.ipk,
+            row.judul,
+            row.svg_name,
+            row.foto,
+         ])
+      );
+      console.info("Mohon tunggu file", fileName, " sedang dibuat ..");
+
+      await workbook.xlsx.writeFile(fileName);
+      console.info("✨ Berhasil Export Data : ", fileName, " ✅");
+   }
+   
 }
 
 module.exports = GenerateSvg;
