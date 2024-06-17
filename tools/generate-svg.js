@@ -96,13 +96,14 @@ class GenerateSvg {
       const worksheet = workbook.addWorksheet("All Data Mahasiswa");
       worksheet.addRow([
          "No",
+         "No Urut",
+         "gender",
          "Nama",
          "NIM",
          "Jenjang",
          "Prodi",
          "IPK",
-         "Judul Skripsi",
-         "No. Urut",
+         "Judul Tugas Akhir",
          "Foto",
       ]);
       console.info("Mohon tunggu data excel sedang dibuat ..");
@@ -110,13 +111,14 @@ class GenerateSvg {
       this.outputData.forEach((row, i) =>
          worksheet.addRow([
             i + 1,
+            row.svg_name,
+            "-",
             row.nama,
             row.nim,
             row.jenjang,
             row.prodi,
             row.ipk,
             row.judul,
-            row.svg_name,
             row.foto,
          ])
       );
