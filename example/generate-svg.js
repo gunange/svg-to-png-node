@@ -1,10 +1,10 @@
-const GenerateSvgToFileData = require("./tools");
+const GenerateSvg = require("./tools");
 
 class main {
    generate;
 
    constructor() {
-      this.generate = new GenerateSvgToFileData();
+      this.generate = new GenerateSvg();
       this.generate.svgDirPath = "./../Export/svg";
       this.generate.outputDir = "./export";
 

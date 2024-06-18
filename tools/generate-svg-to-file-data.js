@@ -4,7 +4,7 @@ const { Resvg } = require("@resvg/resvg-js");
 const cheerio = require("cheerio");
 const exceljs = require("exceljs");
 
-class GenerateSvg {
+class GenerateSvgToFileData {
    svgDirPath = null;
    outputDir = "export";
 
@@ -188,4 +188,4 @@ class GenerateSvg {
    }
 }
 
-module.exports = GenerateSvg;
+module.exports = GenerateSvgToFileData;

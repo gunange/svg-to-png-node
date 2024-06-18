@@ -1,5 +1,5 @@
 const GenerateSvgPng = require("./generate-svg-png")
-const GenerateSvg = require("./generate-svg");
+const GenerateSvgToFileData = require("./generate-svg-to-file-data");
 
 module.exports = GenerateSvgPng;
-module.exports =  GenerateSvg;
+module.exports =  GenerateSvgToFileData;
