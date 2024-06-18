@@ -1,34 +1,24 @@
-const GenerateSvgToFileData = require("./tools");
+const GenerateDataToSvg = require("./tools");
 
 class main {
    generate;
 
    constructor() {
-      this.generate = new GenerateSvgToFileData();
-      this.generate.svgDirPath = "./../Export/svg";
-      this.generate.outputDir = "./export";
+      this.generate = new GenerateDataToSvg();
 
-      this.init();
+      this.generateSvg();
    }
-   async init() {
-      await this.generate.setupDataInExcel({
-         path: "./assets/data/mahasiswa.xlsx",
-         sheet: "Sheet1",
-      });
+   async generateSvg() {
+      this.generate.svgTemplatePathMI = "./assets/mhs-mi.svg";
+      this.generate.svgTemplatePathTK = "./assets/mhs-tk.svg";
+      this.generate.svgOutputDir = "./export";
+      this.generate.dataFormJson = "./assets/data-mhs.json";
 
       await this.generate.run();
-      this.generate.exportDataByProdi = true;
-      this.generate.outputData = this.generate.outputData.sort((a, b) => {
-         if (a.angkatan === b.angkatan) {
-            return a.nim - b.nim;
-         } else {
-            return a.angkatan - b.angkatan;
-         }
-      });
-
-      await this.generate.exportToJson({output : "data-mhs"});
-      await this.generate.exportToExcel({ output: "data-mhs" });
+      // await this.generate.exportSvg();
    }
+
+   async svgToPng() {}
 }
 
 new main();
