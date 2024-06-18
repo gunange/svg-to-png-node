@@ -1,4 +1,11 @@
-const { promises, writeFileSync, access, mkdir } = require("fs");
+const {
+   promises,
+   writeFileSync,
+   access,
+   mkdir,
+   readdirSync,
+   readFile,
+} = require("fs");
 const { Resvg } = require("@resvg/resvg-js");
 const cheerio = require("cheerio");
 const exceljs = require("exceljs");
@@ -6,6 +13,7 @@ const exceljs = require("exceljs");
 class GenerateDataToSvg {
    svgTemplatePathMI = null;
    svgTemplatePathTK = null;
+   svgDirPath = null;
    dataFormJson = null;
    outputDir = null;
    data = {
@@ -19,20 +27,21 @@ class GenerateDataToSvg {
    dpi = 200;
 
    async run() {
-      await this.checkDir();
-      // await this.generate.setupDataInJson(this.dataFormJson);
+      await this.setupDataInJson(this.dataFormJson);
    }
 
-   async exportSvg(){
+   async exportSvg() {
+      await this.checkDir(`${this.outputDir}/mi`);
       for (let i = 0; i < this.data.mi.length; i++) {
          const e = this.data.mi[i];
          await this.editSvg("mi", i + 1, e);
-       }
+      }
 
+      await this.checkDir(`${this.outputDir}/tk`);
       for (let i = 0; i < this.data.tk.length; i++) {
          const e = this.data.tk[i];
          await this.editSvg("tk", i + 1, e);
-       }
+      }
    }
 
    async editSvg(path, number, data) {
@@ -90,13 +99,50 @@ class GenerateDataToSvg {
       this.data.tk = json.filter((e) => e.prodi == this.filter.tk);
    }
 
-   async checkDir(){
-      const dir = await access(this.outputDir)
-      console.log(dir);
-      // if(!dir){
-      //    await mkdir(this.outputDir);
-      // }
-      
+   async checkDir(path) {
+      await access(path, async (err) => {
+         if (err) {
+            if (err.code === "ENOENT") {
+               await mkdir(path, { recursive: true }, (err) => {
+                  if (err) throw err;
+                  console.info("✨ Direktori dibuat: : ", path);
+               });
+            }
+         }
+      });
+   }
+
+   async genDataSvgInDirToPng() {
+      await this.checkDir(`${this.outputDir}`);
+      console.info("\n✨ Generate Data SVG");
+      const fileObjs = await readdirSync(this.svgDirPath, {
+         withFileTypes: true,
+      });
+
+      for (const file of fileObjs) {
+         if (file.name.endsWith(".svg") && file.name !== "000.svg") {
+            const __file = `${file.path}/${file.name}`;
+            const __filePng = `${this.outputDir}/${file.name.replace(
+               /\.svg/,
+               ".png"
+            )}`;
+            console.info("data file : ", __file, " ✅");
+            const svg = (await promises.readFile(__file)).toString();
+            const $ = cheerio.load(svg, {
+               xml: true,
+            });
+            const modifiedSvg = $.xml();
+            const resvg = await new Resvg(modifiedSvg, {
+               dpi: this.dpi,
+            });
+
+            const pngData = resvg.render();
+            const pngBuffer = pngData.asPng();
+
+            await promises.writeFile(__filePng, pngBuffer);
+            console.info("✨ Done : ", __filePng);
+         }
+      }
    }
 }
 
