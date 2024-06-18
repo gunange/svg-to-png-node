@@ -62,8 +62,9 @@ class GenerateDataToSvg {
          $("#text82").text(data.agama); //agama
          $("#text83").text(data.prodi); //prodi
          $("#text84").text(data.tanggal_yudisium); //tgl yudisium
-         $("#flowPara90").text(data.judul); //judul
+         $("#text3").text(data.judul); //judul
          $("#text90").text(fileName); //nomor
+         $("#text2").text(data.ipk); //ipk
 
          if (data.foto) {
             const elFoto = $("<image>")
@@ -77,7 +78,7 @@ class GenerateDataToSvg {
             $("#layer10").append(elFoto);
          } else {
             const styleCanva =
-               "display: none; stroke-width: 3.01625;image-rendering: optimizeSpeed;";
+               "display: inline; stroke-width: 3.01625;image-rendering: optimizeSpeed;";
             data.gender == "L"
                ? $("#image1-2").prop("style", styleCanva)
                : $("#image1").prop("style", styleCanva);
@@ -121,28 +122,30 @@ class GenerateDataToSvg {
 
       for (const file of fileObjs) {
          if (file.name.endsWith(".svg") && file.name !== "000.svg") {
-            const __file = `${file.path}/${file.name}`;
-            const __filePng = `${this.outputDir}/${file.name.replace(
-               /\.svg/,
-               ".png"
-            )}`;
-            console.info("data file : ", __file, " ✅");
-            const svg = (await promises.readFile(__file)).toString();
-            const $ = cheerio.load(svg, {
-               xml: true,
-            });
-            const modifiedSvg = $.xml();
-            const resvg = await new Resvg(modifiedSvg, {
-               dpi: this.dpi,
-            });
-
-            const pngData = resvg.render();
-            const pngBuffer = pngData.asPng();
-
-            await promises.writeFile(__filePng, pngBuffer);
-            console.info("✨ Done : ", __filePng);
+            await this.genOnlyFile(file.path, file.name);
          }
       }
+   }
+   async genOnlyFile(path, name) {
+      const __file = `${path}/${name}`;
+      const __filePng = `${this.outputDir}/${name.replace(/\.svg/, ".png")}`;
+      console.info("data file : ", __file, " ✅");
+      const svg = (await promises.readFile(__file)).toString();
+      const $ = cheerio.load(svg, {
+         xml: true,
+      });
+
+      const modifiedSvg = $.xml();
+
+      const resvg = await new Resvg(modifiedSvg, {
+         dpi: this.dpi,
+      });
+
+      const pngData = resvg.render();
+      const pngBuffer = pngData.asPng();
+
+      await promises.writeFile(__filePng, pngBuffer);
+      console.info("✨ Done : ", __filePng);
    }
 }
 
