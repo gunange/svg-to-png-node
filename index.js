@@ -26,7 +26,7 @@ class main {
          }
       });
 
-      // await this.generate.exportToJson({output : "data-mhs"});
+      await this.generate.exportToJson({output : "data-mhs"});
       await this.generate.exportToExcel({ output: "data-mhs" });
    }
 }
