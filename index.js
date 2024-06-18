@@ -10,9 +10,9 @@ class main {
       
    }
    async init(){
-      // await this.generateSvg();
-      // await this.svgToPng();
-      await this.svgToPngOnly();
+      await this.generateSvg();
+      await this.svgToPng();
+      // await this.svgToPngOnly();
    }
    async generateSvg() {
       this.generate.svgTemplatePathMI = "./assets/mhs-mi.svg";

@@ -48,7 +48,7 @@ class GenerateDataToSvg {
       await new Promise(async (resolve, rejects) => {
          const fileName = number.toString().padStart(3, "0");
          const __file = `${this.outputDir}/${path}/${fileName}.svg`;
-         console.info("generate file : ", __file, " ✅");
+         console.info("export svg : ", fileName, ".svg ✅");
          const svg = (
             await promises.readFile(this.svgTemplatePathMI)
          ).toString();
@@ -129,7 +129,7 @@ class GenerateDataToSvg {
    async genOnlyFile(path, name) {
       const __file = `${path}/${name}`;
       const __filePng = `${this.outputDir}/${name.replace(/\.svg/, ".png")}`;
-      console.info("data file : ", __file, " ✅");
+      console.info("export : ", __file, " ⌛");
       const svg = (await promises.readFile(__file)).toString();
       const $ = cheerio.load(svg, {
          xml: true,
@@ -145,7 +145,7 @@ class GenerateDataToSvg {
       const pngBuffer = pngData.asPng();
 
       await promises.writeFile(__filePng, pngBuffer);
-      console.info("✨ Done : ", __filePng);
+      console.info("✨ Done  ✅ ");
    }
 }
 
