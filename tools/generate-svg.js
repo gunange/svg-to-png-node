@@ -3,8 +3,6 @@ const { promises } = require("fs");
 const { Resvg } = require("@resvg/resvg-js");
 const cheerio = require("cheerio");
 const exceljs = require("exceljs");
-const { resolve } = require("path");
-const { rejects } = require("assert");
 
 class GenerateSvg {
    svgDirPath = null;
@@ -67,7 +65,10 @@ class GenerateSvg {
             nama: $("#tspan3").text(),
             nim: $("#tspan6").text(),
             jenjang: $("#tspan9").text(),
-            prodi: $("#tspan12").text(),
+            prodi: $("#tspan12")
+               .text()
+               .toLowerCase()
+               .replace(/(?<= )[^\s]|^./g, (a) => a.toUpperCase()),
             ipk: $("#tspan15").text(),
             judul: $("#flowRoot21").text(),
             svg_name: file_path.name.replace(/\.svg/, ""),
@@ -75,7 +76,6 @@ class GenerateSvg {
          };
 
          const merge = this.mergeDataInExcel(data);
-
          this.outputData.push(merge);
 
          resolve(__file);
@@ -85,6 +85,7 @@ class GenerateSvg {
    mergeDataInExcel(data) {
       const merge = this.data.find((el) => el.npm == data.nim) ?? {};
       return {
+         gender: merge.gender,
          ...data,
          angkatan: merge.tahun_masuk,
       };
@@ -93,41 +94,98 @@ class GenerateSvg {
    async exportToExcel({ output = "data-mahasiswa" }) {
       const fileName = `${this.outputDir}/${output}.xlsx`;
       const workbook = new exceljs.Workbook();
-      const worksheet = workbook.addWorksheet("All Data Mahasiswa");
-      worksheet.addRow([
+      const allData = workbook.addWorksheet("All Data Mahasiswa");
+      const header = [
          "No",
          "No Urut",
-         "gender",
+         "Gender",
          "Nama",
          "NIM",
+         "Angkatan",
          "Jenjang",
          "Prodi",
          "IPK",
          "Judul Tugas Akhir",
-         "Foto",
-      ]);
+         // "Foto",
+      ];
+      allData.addRow(header);
       console.info("Mohon tunggu data excel sedang dibuat ..");
 
       this.outputData.forEach((row, i) =>
-         worksheet.addRow([
+         allData.addRow([
             i + 1,
             row.svg_name,
-            "-",
+            row.gender,
             row.nama,
             row.nim,
+            row.angkatan,
             row.jenjang,
             row.prodi,
             row.ipk,
             row.judul,
-            row.foto,
+            // row.foto,
          ])
       );
+
+      if (this.exportDataByProdi) {
+         const tk = "Teknik Komputer";
+         const mi = "Manajemen Informatika";
+         const sheetTK = workbook.addWorksheet(tk);
+         const sheetMI = workbook.addWorksheet(mi);
+         const dataTK = this.outputData.filter((e) => e.prodi == tk);
+         const dataMI = this.outputData.filter((e) => e.prodi == mi);
+
+         sheetTK.addRow(header);
+         sheetMI.addRow(header);
+
+         dataTK.forEach((row, i) =>
+            sheetTK.addRow([
+               i + 1,
+               row.svg_name,
+               row.gender,
+               row.nama,
+               row.nim,
+               row.angkatan,
+               row.jenjang,
+               row.prodi,
+               row.ipk,
+               row.judul,
+               // row.foto,
+            ])
+         );
+         dataMI.forEach((row, i) =>
+            sheetMI.addRow([
+               i + 1,
+               row.svg_name,
+               row.gender,
+               row.nama,
+               row.nim,
+               row.angkatan,
+               row.jenjang,
+               row.prodi,
+               row.ipk,
+               row.judul,
+               // row.foto,
+            ])
+         );
+      }
+
       console.info("Mohon tunggu file", fileName, " sedang dibuat ..");
 
       await workbook.xlsx.writeFile(fileName);
-      console.info("✨ Berhasil Export Data : ", fileName, " ✅");
+      console.info("✨ Berhasil Export Data ke FILE: ", fileName, " ✅");
    }
-   
+
+   async exportToJson({ output = "data-mahasiswa" }) {
+      const fileName = `${this.outputDir}/${output}.json`;
+      console.info("Mohon tunggu data JSON sedang dibuat ..");
+      await promises.writeFile(
+         fileName,
+         JSON.stringify(this.outputData),
+         "utf8"
+      );
+      console.info("✨ Berhasil Export Data FILE : ", fileName, " ✅");
+   }
 }
 
 module.exports = GenerateSvg;

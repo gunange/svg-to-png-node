@@ -1,11 +1,11 @@
 const GenerateSvg = require("./tools");
 
 class main {
-   generate ;
+   generate;
 
    constructor() {
       this.generate = new GenerateSvg();
-      this.generate.svgDirPath = "./assets/svg";
+      this.generate.svgDirPath = "./../Export/svg";
       this.generate.outputDir = "./export";
 
       this.init();
@@ -17,8 +17,17 @@ class main {
       });
 
       await this.generate.run();
-      await this.generate.exportToExcel("data-mhs");
-      
+      this.generate.exportDataByProdi = true;
+      this.generate.outputData = this.generate.outputData.sort((a, b) => {
+         if (a.angkatan === b.angkatan) {
+            return a.nim - b.nim;
+         } else {
+            return a.angkatan - b.angkatan;
+         }
+      });
+
+      // await this.generate.exportToJson({output : "data-mhs"});
+      await this.generate.exportToExcel({ output: "data-mhs" });
    }
 }
 
